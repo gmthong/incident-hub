@@ -1,0 +1,6 @@
+- One user can report many incidents.
+- One user can be assigned to many incidents.
+- One user can write many incident analyses.
+- One incident belongs to one reporter and may have one assigned engineer.
+- One incident can have many analyses and many categories.
+- One category can be associated with many incidents.

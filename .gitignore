@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+dump.rdb
+
+RestFox/
+docs/
+tests/

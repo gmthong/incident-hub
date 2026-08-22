@@ -1,0 +1,1 @@
+"""Incident category domain package."""
