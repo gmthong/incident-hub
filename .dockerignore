@@ -1,0 +1,14 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.example
+.git
+.gitignore
+.DS_Store
+RestFox
+dump.rdb
+src/tests/__pycache__
+migrations/__pycache__
