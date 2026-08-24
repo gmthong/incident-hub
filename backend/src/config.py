@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     USE_CREDENTIALS:bool = True
     VALIDATE_CERTS:bool = True
 
-    DOMAIN:str = "localhost:8000"
+    FRONTEND_URL:str = "http://localhost:3000"
     CORS_ORIGINS:list[str] = ["http://localhost:3000"]
     TRUSTED_HOSTS:list[str] = ["localhost", "127.0.0.1", "0.0.0.0"]
     COOKIE_SECURE:bool = False

@@ -116,7 +116,9 @@ class IncidentService:
         assigned_user:Optional[User] = None
         if assignment_data.user_email is not None:
             assigned_user = await user_service.get_user_by_email(str(assignment_data.user_email), session)
-            if assigned_user is None or not assigned_user.is_verified:
+            if assigned_user is None:
+                raise UserNotFound()
+            if not assigned_user.is_verified:
                 raise InvalidAssignment()
             is_engineer = assigned_user.role == UserRole.ENGINEER
             is_privileged_self_assignment = (

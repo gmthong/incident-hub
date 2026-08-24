@@ -50,9 +50,8 @@ all_roles = RoleChecker([UserRole.ADMIN, UserRole.LEADER, UserRole.ENGINEER])
 REFRESH_TOKEN_EXPIRE_DAYS = 1
 
 
-def application_url(path:str) -> str:
-    scheme = "https" if settings.COOKIE_SECURE else "http"
-    return f"{scheme}://{settings.DOMAIN}{path}"
+def frontend_url(path:str) -> str:
+    return f"{settings.FRONTEND_URL.rstrip('/')}/{path.lstrip('/')}"
 
 
 @auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
@@ -65,7 +64,7 @@ async def create_user_account(user_data:UserCreateModel, session:AsyncSession = 
 
     new_user = await user_service.create_user(user_data, session)
     token = create_email_verification_token(new_user.email)
-    link = application_url(f"/api/v1/auth/verify/{token}")
+    link = frontend_url(f"/verify-account/{token}")
 
     send_email_to_users(
         recipients=[new_user.email],
@@ -214,7 +213,7 @@ async def password_reset_request(email_data:PasswordResetModel, session:AsyncSes
 
     if user is not None:
         token = create_password_reset_token(user.email)
-        link = application_url(f"/api/v1/auth/password_reset_confirm/{token}")
+        link = frontend_url(f"/reset-password/{token}")
         send_email_to_users(
             recipients=[user.email],
             subject="Reset your IncidentHub password",
