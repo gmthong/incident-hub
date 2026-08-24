@@ -1,6 +1,6 @@
 import { forwardRef } from "react"
 
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 export const Textarea = forwardRef(function Textarea({className, rows=5, ...props}, ref) {

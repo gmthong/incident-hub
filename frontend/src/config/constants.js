@@ -1,3 +1,4 @@
+// Values shared with the FastAPI enums and error responses.
 export const USER_ROLES = Object.freeze({
   ADMIN:"admin",
   ENGINEER:"engineer",

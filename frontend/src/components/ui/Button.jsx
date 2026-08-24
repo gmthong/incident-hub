@@ -1,7 +1,7 @@
 import { forwardRef } from "react"
 
 import { Spinner } from "@/components/feedback/Spinner"
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 const variants = {

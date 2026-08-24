@@ -1,8 +1,8 @@
 import { MailCheck } from "lucide-react"
 import { Link, useLocation } from "react-router"
 
+import { AuthCard } from "@/components/auth/AuthCard"
 import { InlineAlert } from "@/components/feedback/InlineAlert"
-import { AuthCard } from "@/features/auth/AuthCard"
 
 
 export function VerificationPendingPage() {

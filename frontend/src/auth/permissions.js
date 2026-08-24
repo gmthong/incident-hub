@@ -1,4 +1,4 @@
-import { USER_ROLES } from "@/api/contracts"
+import { USER_ROLES } from "@/config/constants"
 
 
 export function canManageIncident(user, incident) {

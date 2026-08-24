@@ -5,8 +5,8 @@ import { toast } from "sonner"
 
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Button } from "@/components/ui/Button"
-import { useAuth } from "@/features/auth/auth-context"
-import { cn } from "@/lib/cn"
+import { useAuth } from "@/auth/AuthContext"
+import { cn } from "@/utils/cn"
 
 
 const navigation = [

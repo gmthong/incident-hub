@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 
+// Validation shared by the public authentication forms.
 export const emailSchema = z
   .string()
   .trim()

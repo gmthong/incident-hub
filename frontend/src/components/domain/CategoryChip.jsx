@@ -1,6 +1,6 @@
 import { Tag } from "lucide-react"
 
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 export function CategoryChip({name, className}) {

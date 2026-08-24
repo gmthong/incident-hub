@@ -4,15 +4,14 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { Link } from "react-router"
 
-import { getApiErrorMessage } from "@/api/errors"
+import { passwordResetRequestSchema } from "@/auth/authSchemas"
+import { AuthCard } from "@/components/auth/AuthCard"
+import { AuthFormError } from "@/components/auth/AuthFormError"
 import { InlineAlert } from "@/components/feedback/InlineAlert"
 import { Button } from "@/components/ui/Button"
 import { FormField } from "@/components/ui/FormField"
 import { Input } from "@/components/ui/Input"
-import { AuthCard } from "@/features/auth/AuthCard"
-import { AuthFormError } from "@/features/auth/AuthFormError"
-import { requestPasswordReset } from "@/features/auth/api"
-import { passwordResetRequestSchema } from "@/features/auth/schemas"
+import { apiRequest, getApiErrorMessage } from "@/services/apiClient"
 
 
 export function ForgotPasswordPage() {
@@ -26,7 +25,12 @@ export function ForgotPasswordPage() {
 
   const onSubmit = handleSubmit(async ({email}) => {
     try {
-      await requestPasswordReset(email)
+      await apiRequest("auth/password_reset_request", {
+        auth:false,
+        body:{email},
+        method:"POST",
+        retryOnUnauthorized:false,
+      })
       setSubmitted(true)
     } catch (error) {
       setError("root.serverError", {

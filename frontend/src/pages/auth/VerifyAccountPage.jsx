@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query"
 import { CircleCheck } from "lucide-react"
 import { Link, useParams } from "react-router"
 
-import { API_ERROR_CODES } from "@/api/contracts"
+import { AuthCard } from "@/components/auth/AuthCard"
 import { ErrorState } from "@/components/feedback/ErrorState"
 import { Spinner } from "@/components/feedback/Spinner"
-import { AuthCard } from "@/features/auth/AuthCard"
-import { verifyAccount } from "@/features/auth/api"
+import { API_ERROR_CODES } from "@/config/constants"
+import { apiRequest } from "@/services/apiClient"
 
 
 export function VerifyAccountPage() {
@@ -15,7 +15,10 @@ export function VerifyAccountPage() {
     enabled:Boolean(token),
     // Do not consume React Query's cancellation signal here: keeping this
     // idempotent request in flight lets Strict Mode reuse the same promise.
-    queryFn:() => verifyAccount(token),
+    queryFn:() => apiRequest(`auth/verify/${encodeURIComponent(token)}`, {
+      auth:false,
+      retryOnUnauthorized:false,
+    }),
     queryKey:["auth", "verify-account", token],
     retry:false,
     staleTime:Infinity,

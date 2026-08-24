@@ -1,7 +1,7 @@
 import { TriangleAlert } from "lucide-react"
 
 import { Button } from "@/components/ui/Button"
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 export function ErrorState({title, description, action, actionLabel="Try again", onRetry, className}) {

@@ -1,3 +1,4 @@
+// Central names prevent different pages from creating conflicting cache entries.
 export const queryKeys = Object.freeze({
   analyses:{
     all:["analyses"],

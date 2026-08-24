@@ -1,9 +1,9 @@
 import { Route, Routes } from "react-router"
 
-import { USER_ROLES } from "@/api/contracts"
+import { HomeRoute, ProtectedRoute, PublicOnlyRoute, RoleRoute } from "@/auth/AuthGuards"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { AuthLayout } from "@/components/layout/AuthLayout"
-import { HomeRoute, ProtectedRoute, PublicOnlyRoute, RoleRoute } from "@/features/auth/guards"
+import { USER_ROLES } from "@/config/constants"
 import { ForbiddenPage } from "@/pages/ForbiddenPage"
 import { NotFoundPage } from "@/pages/NotFoundPage"
 import { PlaceholderPage } from "@/pages/PlaceholderPage"

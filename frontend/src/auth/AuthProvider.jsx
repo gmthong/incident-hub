@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
-import { API_ERROR_CODES } from "@/api/contracts"
-import { refreshAccessToken, registerSessionLossHandler } from "@/api/client"
-import { clearAccessToken, setAccessToken } from "@/api/token-store"
-import { getCurrentUser, loginAccount, logoutAccount } from "@/features/auth/api"
-import { AuthContext } from "@/features/auth/auth-context"
+import { AuthContext } from "@/auth/AuthContext"
+import { API_ERROR_CODES } from "@/config/constants"
+import {
+  apiRequest,
+  clearAccessToken,
+  refreshAccessToken,
+  registerSessionLossHandler,
+  setAccessToken,
+} from "@/services/apiClient"
 
 
 const CHECKING_SESSION = Object.freeze({status:"checking", user:null})
@@ -18,7 +22,7 @@ async function restoreSession() {
   if (!restorationPromise) {
     restorationPromise = (async () => {
       await refreshAccessToken()
-      return getCurrentUser()
+      return apiRequest("auth/me")
     })().finally(() => {
       restorationPromise = null
     })
@@ -71,11 +75,16 @@ export function AuthProvider({children, initialState}) {
   }, [initialState])
 
   const login = useCallback(async (credentials) => {
-    const response = await loginAccount(credentials)
+    const response = await apiRequest("auth/login", {
+      auth:false,
+      body:credentials,
+      method:"POST",
+      retryOnUnauthorized:false,
+    })
     setAccessToken(response.access_token)
 
     try {
-      const user = await getCurrentUser()
+      const user = await apiRequest("auth/me")
       setSession({status:"authenticated", user})
       return user
     } catch (error) {
@@ -90,7 +99,7 @@ export function AuthProvider({children, initialState}) {
 
   const logout = useCallback(async () => {
     try {
-      await logoutAccount()
+      await apiRequest("auth/logout", {method:"POST"})
     } finally {
       clearSession()
     }

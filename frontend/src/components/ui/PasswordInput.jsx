@@ -3,7 +3,7 @@ import { Eye, EyeOff } from "lucide-react"
 
 import { IconButton } from "@/components/ui/IconButton"
 import { Input } from "@/components/ui/Input"
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 export const PasswordInput = forwardRef(function PasswordInput({className, ...props}, ref) {

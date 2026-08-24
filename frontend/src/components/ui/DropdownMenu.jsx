@@ -1,6 +1,6 @@
 import * as DropdownPrimitive from "@radix-ui/react-dropdown-menu"
 
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 export function DropdownMenu({trigger, children, label="Actions"}) {

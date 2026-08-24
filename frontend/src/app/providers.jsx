@@ -3,8 +3,8 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { Toaster } from "sonner"
 
-import { createAppQueryClient } from "@/lib/query-client"
-import { AuthProvider } from "@/features/auth/AuthProvider"
+import { AuthProvider } from "@/auth/AuthProvider"
+import { createAppQueryClient } from "@/services/queryClient"
 
 
 export function AppProviders({children, initialAuthState, queryClient, showDevtools=import.meta.env.DEV}) {

@@ -4,16 +4,15 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { Link, useParams } from "react-router"
 
-import { API_ERROR_CODES } from "@/api/contracts"
-import { getApiErrorMessage } from "@/api/errors"
+import { passwordResetConfirmSchema } from "@/auth/authSchemas"
+import { AuthCard } from "@/components/auth/AuthCard"
+import { AuthFormError } from "@/components/auth/AuthFormError"
 import { InlineAlert } from "@/components/feedback/InlineAlert"
 import { Button } from "@/components/ui/Button"
 import { FormField } from "@/components/ui/FormField"
 import { PasswordInput } from "@/components/ui/PasswordInput"
-import { AuthCard } from "@/features/auth/AuthCard"
-import { AuthFormError } from "@/features/auth/AuthFormError"
-import { resetPassword } from "@/features/auth/api"
-import { passwordResetConfirmSchema } from "@/features/auth/schemas"
+import { API_ERROR_CODES } from "@/config/constants"
+import { apiRequest, getApiErrorMessage } from "@/services/apiClient"
 
 
 export function ResetPasswordPage() {
@@ -37,7 +36,12 @@ export function ResetPasswordPage() {
     }
 
     try {
-      await resetPassword(token, values)
+      await apiRequest(`auth/password_reset_confirm/${encodeURIComponent(token)}`, {
+        auth:false,
+        body:values,
+        method:"POST",
+        retryOnUnauthorized:false,
+      })
       reset()
       setSucceeded(true)
     } catch (error) {

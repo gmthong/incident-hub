@@ -2,7 +2,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { IconButton } from "@/components/ui/IconButton"
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 export function Dialog({

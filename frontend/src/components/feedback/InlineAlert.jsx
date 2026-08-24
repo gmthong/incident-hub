@@ -1,6 +1,6 @@
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react"
 
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 const variants = {

@@ -1,6 +1,6 @@
 import { Inbox } from "lucide-react"
 
-import { cn } from "@/lib/cn"
+import { cn } from "@/utils/cn"
 
 
 export function EmptyState({title, description, action, icon:Icon=Inbox, className}) {

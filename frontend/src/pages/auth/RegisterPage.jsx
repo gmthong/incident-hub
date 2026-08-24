@@ -3,16 +3,15 @@ import { UserPlus } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router"
 
-import { API_ERROR_CODES } from "@/api/contracts"
-import { getApiErrorMessage } from "@/api/errors"
+import { registrationSchema } from "@/auth/authSchemas"
+import { AuthCard } from "@/components/auth/AuthCard"
+import { AuthFormError } from "@/components/auth/AuthFormError"
 import { Button } from "@/components/ui/Button"
 import { FormField } from "@/components/ui/FormField"
 import { Input } from "@/components/ui/Input"
 import { PasswordInput } from "@/components/ui/PasswordInput"
-import { AuthCard } from "@/features/auth/AuthCard"
-import { AuthFormError } from "@/features/auth/AuthFormError"
-import { registerAccount } from "@/features/auth/api"
-import { registrationSchema } from "@/features/auth/schemas"
+import { API_ERROR_CODES } from "@/config/constants"
+import { apiRequest, getApiErrorMessage } from "@/services/apiClient"
 
 
 export function RegisterPage() {
@@ -36,7 +35,12 @@ export function RegisterPage() {
 
   const onSubmit = handleSubmit(async ({confirmPassword:_confirmPassword, ...userData}) => {
     try {
-      await registerAccount(userData)
+      await apiRequest("auth/signup", {
+        auth:false,
+        body:userData,
+        method:"POST",
+        retryOnUnauthorized:false,
+      })
       navigate("/verification-pending", {replace:true, state:{email:userData.email}})
     } catch (error) {
       if (error?.code === API_ERROR_CODES.USER_EXISTS) {

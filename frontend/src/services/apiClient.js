@@ -1,10 +1,41 @@
-import { ApiError } from "@/api/errors"
-import { clearAccessToken, getAccessToken, setAccessToken } from "@/api/token-store"
 import { API_BASE_URL } from "@/config/environment"
 
 
+export class ApiError extends Error {
+  constructor({message, status=0, code="request_failed", details=null, isNetworkError=false}) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+    this.code = code
+    this.details = details
+    this.isNetworkError = isNetworkError
+  }
+}
+
+
+export function getApiErrorMessage(error, fallback="Something went wrong. Please try again.") {
+  return error instanceof ApiError && error.message ? error.message : fallback
+}
+
+
+let accessToken = null
 let refreshPromise = null
 let sessionLossHandler = null
+
+
+export function clearAccessToken() {
+  accessToken = null
+}
+
+
+function getAccessToken() {
+  return accessToken
+}
+
+
+export function setAccessToken(token) {
+  accessToken = typeof token === "string" && token.length > 0 ? token : null
+}
 
 
 function buildUrl(path) {
