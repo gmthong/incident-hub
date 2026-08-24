@@ -13,4 +13,11 @@ dump.rdb
 
 RestFox/
 docs/
+
+node_modules/
+dist/
+coverage/
+.vite/
+playwright-report/
+test-results/
 tests/
