@@ -32,7 +32,7 @@ export default defineConfig([
     },
   },
   {
-    files:["src/**/*.test.{js,jsx}", "src/test/**/*.{js,jsx}"],
+    files:["src/tests/**/*.{js,jsx}"],
     languageOptions:{
       globals:globals.vitest,
     },

@@ -1,7 +1,11 @@
-import { Activity, LayoutDashboard, ListTree, ShieldCheck } from "lucide-react"
-import { NavLink, Outlet } from "react-router"
+import { useState } from "react"
+import { Activity, LayoutDashboard, ListTree, LogOut, ShieldCheck } from "lucide-react"
+import { NavLink, Outlet, useNavigate } from "react-router"
+import { toast } from "sonner"
 
 import { PageContainer } from "@/components/layout/PageContainer"
+import { Button } from "@/components/ui/Button"
+import { useAuth } from "@/features/auth/auth-context"
 import { cn } from "@/lib/cn"
 
 
@@ -13,6 +17,22 @@ const navigation = [
 
 
 export function AppLayout() {
+  const {logout} = useAuth()
+  const navigate = useNavigate()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  async function handleLogout() {
+    setIsLoggingOut(true)
+    try {
+      await logout()
+      toast.success("You have been signed out")
+    } catch {
+      toast.info("You have been signed out locally")
+    } finally {
+      navigate("/login", {replace:true})
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <header className="border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -23,7 +43,8 @@ export function AppLayout() {
             </span>
             <span>IncidentHub</span>
           </NavLink>
-          <nav aria-label="Primary navigation" className="flex flex-wrap items-center justify-end gap-1">
+          <div className="flex items-center gap-2">
+            <nav aria-label="Primary navigation" className="flex flex-wrap items-center justify-end gap-1">
             {navigation.map(({label, to, icon:Icon}) => (
               <NavLink
                 className={({isActive}) => cn(
@@ -39,7 +60,19 @@ export function AppLayout() {
                 <span className="hidden md:inline">{label}</span>
               </NavLink>
             ))}
-          </nav>
+            </nav>
+            <Button
+              aria-label="Sign out"
+              className="px-2.5"
+              isLoading={isLoggingOut}
+              loadingLabel="Signing out"
+              onClick={handleLogout}
+              variant="ghost"
+            >
+              <LogOut aria-hidden="true" className="size-4" />
+              <span className="hidden lg:inline">Sign out</span>
+            </Button>
+          </div>
         </PageContainer>
       </header>
       <main id="main-content">
