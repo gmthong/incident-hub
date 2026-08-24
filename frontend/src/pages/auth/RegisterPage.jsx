@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/Input"
 import { PasswordInput } from "@/components/ui/PasswordInput"
 import { AuthCard } from "@/features/auth/AuthCard"
 import { AuthFormError } from "@/features/auth/AuthFormError"
-import { PasswordRequirements } from "@/features/auth/PasswordRequirements"
 import { registerAccount } from "@/features/auth/api"
 import { registrationSchema } from "@/features/auth/schemas"
 
@@ -76,7 +75,6 @@ export function RegisterPage() {
         <FormField error={errors.email?.message} id="register-email" label="Email" required>
           <Input autoComplete="email" inputMode="email" maxLength={100} {...register("email")} />
         </FormField>
-        <PasswordRequirements />
         <FormField error={errors.password?.message} id="register-password" label="Password" required>
           <PasswordInput autoComplete="new-password" maxLength={100} {...register("password")} />
         </FormField>

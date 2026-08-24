@@ -12,7 +12,6 @@ import { FormField } from "@/components/ui/FormField"
 import { PasswordInput } from "@/components/ui/PasswordInput"
 import { AuthCard } from "@/features/auth/AuthCard"
 import { AuthFormError } from "@/features/auth/AuthFormError"
-import { PasswordRequirements } from "@/features/auth/PasswordRequirements"
 import { resetPassword } from "@/features/auth/api"
 import { passwordResetConfirmSchema } from "@/features/auth/schemas"
 
@@ -67,7 +66,6 @@ export function ResetPasswordPage() {
       ) : (
         <form className="space-y-5" noValidate onSubmit={onSubmit}>
           <AuthFormError message={errors.root?.serverError?.message} />
-          <PasswordRequirements />
           <FormField error={errors.new_password?.message} id="reset-password" label="New password" required>
             <PasswordInput autoComplete="new-password" maxLength={100} {...register("new_password")} />
           </FormField>
