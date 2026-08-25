@@ -8,6 +8,7 @@ import { cn } from "@/utils/cn"
 export function Dialog({
   children,
   className,
+  contentClassName,
   description,
   footer,
   onOpenChange,
@@ -39,7 +40,7 @@ export function Dialog({
               <X aria-hidden="true" className="size-4" />
             </IconButton>
           </DialogPrimitive.Close>
-          <div className="max-h-[70vh] overflow-y-auto p-5">{children}</div>
+          <div className={cn("max-h-[70vh] overflow-y-auto p-5", contentClassName)}>{children}</div>
           {footer ? <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 px-5 py-4">{footer}</div> : null}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

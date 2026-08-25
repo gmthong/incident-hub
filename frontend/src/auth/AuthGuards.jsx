@@ -5,7 +5,7 @@ import { Spinner } from "@/components/feedback/Spinner"
 import { useAuth } from "@/auth/AuthContext"
 
 
-function FullPageSessionLoader() {
+export function FullPageSessionLoader() {
   return (
     <main className="grid min-h-screen place-items-center bg-slate-950 px-4 text-white">
       <div className="flex flex-col items-center gap-4 text-center">
