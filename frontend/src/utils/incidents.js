@@ -84,6 +84,16 @@ export const incidentEditSchema = z.object({
   }
 })
 
+export const incidentAssignmentSchema = z.object({
+  user_email:z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .max(100, "Email must be 100 characters or fewer")
+    .email("Enter a valid email address")
+    .transform((value) => value.toLowerCase()),
+})
+
 
 export function toLocalDateTimeInput(value) {
   if (!value) {

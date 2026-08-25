@@ -1,14 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, FilePenLine, FolderOpen, Trash2, UserRoundCheck } from "lucide-react"
+import { ArrowLeft, FilePenLine, FolderOpen, Tags, Trash2, UserCog, UserRoundCheck, UserRoundX } from "lucide-react"
 import { Link, useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
 
 import { useAuth } from "@/auth/AuthContext"
-import { canDeleteIncident, canManageIncident } from "@/auth/permissions"
+import { canAssignIncident, canDeleteIncident, canManageIncident } from "@/auth/permissions"
+import { CategoryMultiSelect } from "@/components/categories/CategoryMultiSelect"
 import { CategoryChip } from "@/components/domain/CategoryChip"
 import { DateTimeDisplay } from "@/components/domain/DateTimeDisplay"
 import { IncidentStatusBadge } from "@/components/domain/IncidentStatusBadge"
+import { AssignmentDialog } from "@/components/incidents/AssignmentDialog"
 import { ErrorState } from "@/components/feedback/ErrorState"
+import { InlineAlert } from "@/components/feedback/InlineAlert"
 import { Skeleton } from "@/components/feedback/Skeleton"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Button } from "@/components/ui/Button"
@@ -62,9 +65,59 @@ export function IncidentDetailPage() {
     queryFn:({signal}) => apiRequest(`incidents/${incidentUid}`, {signal}),
     queryKey:queryKeys.incidents.detail(incidentUid),
   })
+  const canEditCurrentIncident = Boolean(
+    incidentQuery.data && canManageIncident(user, incidentQuery.data),
+  )
+  const categoriesQuery = useQuery({
+    enabled:validUid && canEditCurrentIncident,
+    queryFn:({signal}) => apiRequest("categories/", {signal}),
+    queryKey:queryKeys.categories.all,
+    staleTime:120_000,
+  })
   const deleteMutation = useMutation({
     mutationFn:() => apiRequest(`incidents/${incidentUid}`, {method:"DELETE"}),
   })
+  const categoriesMutation = useMutation({
+    mutationFn:(categoryUids) => apiRequest(`incidents/${incidentUid}/categories`, {
+      body:{category_uids:categoryUids},
+      method:"PUT",
+    }),
+  })
+  const assignmentMutation = useMutation({
+    mutationFn:(userEmail) => apiRequest(`incidents/${incidentUid}/assignment`, {
+      body:{user_email:userEmail},
+      method:"PATCH",
+    }),
+  })
+
+  async function updateIncidentSnapshot(updatedIncident) {
+    queryClient.setQueryData(queryKeys.incidents.detail(incidentUid), (currentIncident) => (
+      currentIncident
+        ? {...currentIncident, ...updatedIncident, analyses:currentIncident.analyses || []}
+        : currentIncident
+    ))
+    await queryClient.invalidateQueries({
+      predicate:(query) => query.queryKey[0] === "incidents" && query.queryKey[1] !== "detail",
+    })
+  }
+
+  async function replaceCategories(categoryUids) {
+    const updatedIncident = await categoriesMutation.mutateAsync(categoryUids)
+    await updateIncidentSnapshot(updatedIncident)
+    toast.success(categoryUids.length > 0 ? "Incident categories updated" : "Incident categories cleared")
+  }
+
+  async function assignUser(userEmail) {
+    const updatedIncident = await assignmentMutation.mutateAsync(userEmail)
+    await updateIncidentSnapshot(updatedIncident)
+    toast.success("Incident assigned")
+  }
+
+  async function unassignUser() {
+    const updatedIncident = await assignmentMutation.mutateAsync(null)
+    await updateIncidentSnapshot(updatedIncident)
+    toast.success("Incident unassigned")
+  }
 
   async function deleteIncident() {
     try {
@@ -176,11 +229,34 @@ export function IncidentDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Categories</CardTitle>
-              <p className="mt-1 text-sm text-slate-600">Operational classifications attached to this incident.</p>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Categories</CardTitle>
+                <p className="mt-1 text-sm text-slate-600">Operational classifications attached to this incident.</p>
+              </div>
+              {canEdit && categoriesQuery.isSuccess ? (
+                <CategoryMultiSelect
+                  categories={categoriesQuery.data}
+                  initialCategoryUids={(incident.categories || []).map((category) => category.uid)}
+                  onSave={replaceCategories}
+                  trigger={(
+                    <Button size="sm" variant="outline">
+                      <Tags aria-hidden="true" className="size-4" />
+                      Manage
+                    </Button>
+                  )}
+                />
+              ) : null}
             </CardHeader>
             <CardContent>
+              {canEdit && categoriesQuery.isPending ? (
+                <p className="mb-4 text-sm text-slate-500">Loading available categories…</p>
+              ) : null}
+              {canEdit && categoriesQuery.isError ? (
+                <InlineAlert className="mb-4" title="Could not load the category catalog" variant="error">
+                  <button className="font-medium underline" onClick={() => categoriesQuery.refetch()} type="button">Try again</button>
+                </InlineAlert>
+              ) : null}
               {incident.categories?.length ? (
                 <div className="flex flex-wrap gap-2">
                   {incident.categories.map((category) => <CategoryChip key={category.uid} name={category.name} />)}
@@ -196,6 +272,40 @@ export function IncidentDetailPage() {
         </div>
 
         <div className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Assignment</CardTitle>
+                <p className="mt-1 text-sm text-slate-600">Current incident ownership.</p>
+              </div>
+              {canAssignIncident(user) ? (
+                <AssignmentDialog
+                  currentAssignment={assignee}
+                  hasAssignee={Boolean(incident.assigned_user_uid)}
+                  onAssign={assignUser}
+                  onUnassign={unassignUser}
+                  trigger={(
+                    <Button size="sm" variant="outline">
+                      <UserCog aria-hidden="true" className="size-4" />
+                      Manage
+                    </Button>
+                  )}
+                />
+              ) : null}
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-4">
+                {incident.assigned_user_uid
+                  ? <UserRoundCheck aria-hidden="true" className="size-5 text-violet-700" />
+                  : <UserRoundX aria-hidden="true" className="size-5 text-slate-500" />}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assigned user</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{assignee}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Record metadata</CardTitle>

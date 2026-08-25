@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout"
 import { AuthLayout } from "@/components/layout/AuthLayout"
 import { USER_ROLES } from "@/config/constants"
 import { DashboardPage } from "@/pages/DashboardPage"
+import { CategoriesPage } from "@/pages/CategoriesPage"
 import { ForbiddenPage } from "@/pages/ForbiddenPage"
 import { NotFoundPage } from "@/pages/NotFoundPage"
 import { PlaceholderPage } from "@/pages/PlaceholderPage"
@@ -45,7 +46,7 @@ export function AppRoutes() {
           <Route element={<IncidentCreatePage />} path="/incidents/new" />
           <Route element={<IncidentDetailPage />} path="/incidents/:incidentUid" />
           <Route element={<IncidentEditPage />} path="/incidents/:incidentUid/edit" />
-          <Route element={<PlaceholderPage title="Categories" description="Browse incident classifications and manage them when authorized." />} path="/categories" />
+          <Route element={<CategoriesPage />} path="/categories" />
           <Route element={<ProfilePage />} path="/profile" />
           <Route element={<RoleRoute allowedRoles={[USER_ROLES.ADMIN]} />}>
             <Route element={<PlaceholderPage area="Administration" title="Users" description="Manage user profile fields and roles." />} path="/admin/users" />

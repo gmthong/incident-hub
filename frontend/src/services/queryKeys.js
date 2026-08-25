@@ -9,6 +9,7 @@ export const queryKeys = Object.freeze({
   },
   categories:{
     all:["categories"],
+    detail:(uid) => ["categories", "detail", uid],
   },
   incidents:{
     all:["incidents"],
