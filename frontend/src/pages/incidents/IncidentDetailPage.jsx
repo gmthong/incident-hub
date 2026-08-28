@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, FilePenLine, FolderOpen, Tags, Trash2, UserCog, UserRoundCheck, UserRoundX } from "lucide-react"
+import { ArrowLeft, FilePenLine, FolderOpen, Plus, Tags, Trash2, UserCog, UserRoundCheck, UserRoundX } from "lucide-react"
 import { Link, useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
 
 import { useAuth } from "@/auth/AuthContext"
 import { canAssignIncident, canDeleteIncident, canManageIncident } from "@/auth/permissions"
+import { AnalysisFormDialog } from "@/components/analyses/AnalysisFormDialog"
+import { AnalysisList } from "@/components/analyses/AnalysisList"
 import { CategoryMultiSelect } from "@/components/categories/CategoryMultiSelect"
 import { CategoryChip } from "@/components/domain/CategoryChip"
 import { DateTimeDisplay } from "@/components/domain/DateTimeDisplay"
@@ -89,6 +91,15 @@ export function IncidentDetailPage() {
       method:"PATCH",
     }),
   })
+  const createAnalysisMutation = useMutation({
+    mutationFn:(values) => apiRequest(`incidents/${incidentUid}/analyses`, {body:values, method:"POST"}),
+  })
+  const updateAnalysisMutation = useMutation({
+    mutationFn:({analysisUid, values}) => apiRequest(`analyses/${analysisUid}`, {body:values, method:"PATCH"}),
+  })
+  const deleteAnalysisMutation = useMutation({
+    mutationFn:(analysis) => apiRequest(`analyses/${analysis.uid}`, {method:"DELETE"}),
+  })
 
   async function updateIncidentSnapshot(updatedIncident) {
     queryClient.setQueryData(queryKeys.incidents.detail(incidentUid), (currentIncident) => (
@@ -117,6 +128,49 @@ export function IncidentDetailPage() {
     const updatedIncident = await assignmentMutation.mutateAsync(null)
     await updateIncidentSnapshot(updatedIncident)
     toast.success("Incident unassigned")
+  }
+
+  async function createAnalysis(values) {
+    const createdAnalysis = await createAnalysisMutation.mutateAsync(values)
+    queryClient.setQueryData(queryKeys.incidents.detail(incidentUid), (currentIncident) => (
+      currentIncident
+        ? {...currentIncident, analyses:[...(currentIncident.analyses || []), createdAnalysis]}
+        : currentIncident
+    ))
+    queryClient.setQueryData(queryKeys.analyses.detail(createdAnalysis.uid), createdAnalysis)
+    await queryClient.invalidateQueries({queryKey:queryKeys.analyses.all})
+    toast.success("Analysis added")
+  }
+
+  async function updateAnalysis(analysis, values) {
+    const updatedAnalysis = await updateAnalysisMutation.mutateAsync({analysisUid:analysis.uid, values})
+    queryClient.setQueryData(queryKeys.incidents.detail(incidentUid), (currentIncident) => (
+      currentIncident
+        ? {
+          ...currentIncident,
+          analyses:(currentIncident.analyses || []).map((item) => item.uid === updatedAnalysis.uid ? updatedAnalysis : item),
+        }
+        : currentIncident
+    ))
+    queryClient.setQueryData(queryKeys.analyses.detail(updatedAnalysis.uid), updatedAnalysis)
+    await queryClient.invalidateQueries({queryKey:queryKeys.analyses.all})
+    toast.success("Analysis updated")
+  }
+
+  async function deleteAnalysis(analysis) {
+    try {
+      await deleteAnalysisMutation.mutateAsync(analysis)
+      queryClient.setQueryData(queryKeys.incidents.detail(incidentUid), (currentIncident) => (
+        currentIncident
+          ? {...currentIncident, analyses:(currentIncident.analyses || []).filter((item) => item.uid !== analysis.uid)}
+          : currentIncident
+      ))
+      queryClient.removeQueries({exact:true, queryKey:queryKeys.analyses.detail(analysis.uid)})
+      await queryClient.invalidateQueries({queryKey:queryKeys.analyses.all})
+      toast.success("Analysis deleted")
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "IncidentHub could not delete this analysis."))
+    }
   }
 
   async function deleteIncident() {
@@ -319,24 +373,34 @@ export function IncidentDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-3">
-              <span className="grid size-9 place-items-center rounded-lg bg-violet-50 text-violet-700">
-                <UserRoundCheck aria-hidden="true" className="size-4" />
-              </span>
-              <div>
-                <CardTitle>Analyses</CardTitle>
-                <p className="mt-1 text-sm text-slate-600">{incident.analyses?.length || 0} recorded</p>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-6 text-slate-600">
-                Existing records are included in this count. Analysis creation and management controls will be added here next.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
+
+      <section className="mt-6" aria-labelledby="incident-analyses-heading">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-950" id="incident-analyses-heading">Analyses</h2>
+            <p className="mt-1 text-sm text-slate-600">Operational findings and follow-up context, ordered oldest to newest.</p>
+          </div>
+          <AnalysisFormDialog
+            onSave={createAnalysis}
+            trigger={(
+              <Button>
+                <Plus aria-hidden="true" className="size-4" />
+                Add analysis
+              </Button>
+            )}
+          />
+        </div>
+        <AnalysisList
+          analyses={incident.analyses || []}
+          currentUser={user}
+          emptyDescription="No analysis has been recorded for this incident."
+          isDeletingUid={deleteAnalysisMutation.variables?.uid}
+          onDelete={deleteAnalysis}
+          onEdit={updateAnalysis}
+        />
+      </section>
     </PageContainer>
   )
 }

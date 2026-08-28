@@ -8,8 +8,9 @@ import { DashboardPage } from "@/pages/DashboardPage"
 import { CategoriesPage } from "@/pages/CategoriesPage"
 import { ForbiddenPage } from "@/pages/ForbiddenPage"
 import { NotFoundPage } from "@/pages/NotFoundPage"
-import { PlaceholderPage } from "@/pages/PlaceholderPage"
 import { ProfilePage } from "@/pages/ProfilePage"
+import { AdminAnalysesPage } from "@/pages/admin/AdminAnalysesPage"
+import { AdminUsersPage } from "@/pages/admin/AdminUsersPage"
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage"
 import { LoginPage } from "@/pages/auth/LoginPage"
 import { RegisterPage } from "@/pages/auth/RegisterPage"
@@ -49,8 +50,8 @@ export function AppRoutes() {
           <Route element={<CategoriesPage />} path="/categories" />
           <Route element={<ProfilePage />} path="/profile" />
           <Route element={<RoleRoute allowedRoles={[USER_ROLES.ADMIN]} />}>
-            <Route element={<PlaceholderPage area="Administration" title="Users" description="Manage user profile fields and roles." />} path="/admin/users" />
-            <Route element={<PlaceholderPage area="Administration" title="Analyses" description="Review analyses across all incidents." />} path="/admin/analyses" />
+            <Route element={<AdminUsersPage />} path="/admin/users" />
+            <Route element={<AdminAnalysesPage />} path="/admin/analyses" />
           </Route>
           <Route element={<ForbiddenPage />} path="/forbidden" />
         </Route>

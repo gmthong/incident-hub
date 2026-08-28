@@ -10,6 +10,7 @@ import {
   registerSessionLossHandler,
   setAccessToken,
 } from "@/services/apiClient"
+import { queryKeys } from "@/services/queryKeys"
 
 
 const CHECKING_SESSION = Object.freeze({status:"checking", user:null})
@@ -74,6 +75,13 @@ export function AuthProvider({children, initialState}) {
     }
   }, [initialState])
 
+  const refreshUser = useCallback(async () => {
+    const user = await apiRequest("auth/me")
+    queryClient.setQueryData(queryKeys.auth.me, user)
+    setSession({status:"authenticated", user})
+    return user
+  }, [queryClient])
+
   const login = useCallback(async (credentials) => {
     const response = await apiRequest("auth/login", {
       auth:false,
@@ -84,8 +92,7 @@ export function AuthProvider({children, initialState}) {
     setAccessToken(response.access_token)
 
     try {
-      const user = await apiRequest("auth/me")
-      setSession({status:"authenticated", user})
+      const user = await refreshUser()
       return user
     } catch (error) {
       if (error?.code === API_ERROR_CODES.ACCOUNT_NOT_VERIFIED) {
@@ -95,7 +102,7 @@ export function AuthProvider({children, initialState}) {
       }
       throw error
     }
-  }, [clearSession])
+  }, [clearSession, refreshUser])
 
   const logout = useCallback(async () => {
     try {
@@ -110,9 +117,10 @@ export function AuthProvider({children, initialState}) {
     isAuthenticated:session.status === "authenticated",
     login,
     logout,
+    refreshUser,
     status:session.status,
     user:session.user,
-  }), [clearSession, login, logout, session])
+  }), [clearSession, login, logout, refreshUser, session])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

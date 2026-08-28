@@ -92,6 +92,7 @@ export const ANALYSIS_SEVERITY_VALUES = Object.freeze(Object.values(ANALYSIS_SEV
 
 export const API_ERROR_CODES = Object.freeze({
   ACCOUNT_NOT_VERIFIED:"account_not_verified",
+  ANALYSIS_NOT_FOUND:"analysis_not_found",
   CATEGORY_EXISTS:"category_exists",
   CATEGORY_NOT_FOUND:"category_not_found",
   INCIDENT_NOT_FOUND:"incident_not_found",
