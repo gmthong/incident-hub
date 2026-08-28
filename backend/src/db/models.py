@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from sqlalchemy import Column, ForeignKey, Text, UniqueConstraint, func
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Text, UniqueConstraint, func
 from sqlalchemy.dialects import postgresql as pg
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -236,6 +236,12 @@ class Incident(SQLModel, table=True):
 
 class IncidentAnalysis(SQLModel, table=True):
     __tablename__ = "incident_analyses"
+    __table_args__ = (
+        CheckConstraint(
+            "char_length(analysis_text) BETWEEN 1 AND 5000",
+            name="ck_incident_analyses_analysis_text_length",
+        ),
+    )
 
     uid:uuid.UUID = Field(
         sa_column=Column(
