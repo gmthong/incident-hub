@@ -80,10 +80,10 @@ export function RegisterPage() {
           <Input autoComplete="email" inputMode="email" maxLength={100} {...register("email")} />
         </FormField>
         <FormField error={errors.password?.message} id="register-password" label="Password" required>
-          <PasswordInput autoComplete="new-password" maxLength={100} {...register("password")} />
+          <PasswordInput autoComplete="new-password" maxLength={72} {...register("password")} />
         </FormField>
         <FormField error={errors.confirmPassword?.message} id="register-confirm-password" label="Confirm password" required>
-          <PasswordInput autoComplete="new-password" maxLength={100} {...register("confirmPassword")} />
+          <PasswordInput autoComplete="new-password" maxLength={72} {...register("confirmPassword")} />
         </FormField>
         <Button className="w-full" isLoading={isSubmitting} loadingLabel="Creating account" type="submit">
           <UserPlus aria-hidden="true" className="size-4" />

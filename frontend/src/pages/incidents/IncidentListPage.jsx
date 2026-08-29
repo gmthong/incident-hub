@@ -35,7 +35,7 @@ const filterParameters = {
 
 function IncidentListSkeleton({reportedOnly}) {
   return (
-    <PageContainer>
+    <PageContainer aria-busy="true" aria-live="polite" role="status">
       <Skeleton className="h-5 w-36" />
       <Skeleton className="mt-3 h-9 w-72 max-w-full" />
       <Skeleton className="mt-3 h-5 w-full max-w-2xl" />

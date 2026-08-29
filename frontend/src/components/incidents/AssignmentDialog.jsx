@@ -30,6 +30,9 @@ export function AssignmentDialog({currentAssignment, hasAssignee, onAssign, onUn
   })
 
   function changeOpen(nextOpen) {
+    if (!nextOpen && (isSubmitting || isUnassigning)) {
+      return
+    }
     if (nextOpen) {
       reset({user_email:""})
       clearErrors()

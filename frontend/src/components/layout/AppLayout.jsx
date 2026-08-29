@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Activity,
   ChevronDown,
@@ -173,7 +173,12 @@ export function AppLayout({children}) {
   const navigate = useNavigate()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
+  const mainContentRef = useRef(null)
   const pageTitle = getPageTitle(location.pathname)
+
+  useEffect(() => {
+    mainContentRef.current?.focus({preventScroll:true})
+  }, [location.pathname])
 
   async function handleLogout() {
     if (isLoggingOut) {
@@ -216,8 +221,8 @@ export function AppLayout({children}) {
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
           <div className="flex min-h-16 items-center gap-3 px-4 md:px-6 lg:px-8">
             <Dialog
-              className="left-0 top-0 h-screen w-[min(20rem,calc(100%-2rem))] max-w-none translate-x-0 translate-y-0 rounded-l-none rounded-r-xl border-y-0 border-l-0"
-              contentClassName="flex h-[calc(100vh-4.6rem)] max-h-none flex-col bg-slate-950 p-4"
+              className="left-0 top-0 h-[100dvh] max-h-[100dvh] w-[min(20rem,calc(100%-2rem))] max-w-none translate-x-0 translate-y-0 rounded-l-none rounded-r-xl border-y-0 border-l-0"
+              contentClassName="flex h-[calc(100dvh-4.6rem)] max-h-none flex-col bg-slate-950 p-4"
               description="Navigate between IncidentHub pages."
               onOpenChange={setIsMobileNavigationOpen}
               open={isMobileNavigationOpen}
@@ -279,7 +284,7 @@ export function AppLayout({children}) {
           </div>
         </header>
 
-        <main id="main-content" tabIndex={-1}>
+        <main className="min-w-0 outline-none" id="main-content" ref={mainContentRef} tabIndex={-1}>
           {children ?? <Outlet />}
         </main>
       </div>

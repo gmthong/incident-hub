@@ -37,12 +37,13 @@ function VerificationBadge({isVerified}) {
 
 function UsersSkeleton() {
   return (
-    <PageContainer>
+    <PageContainer aria-busy="true" aria-live="polite" role="status">
       <Skeleton className="h-5 w-32" />
       <Skeleton className="mt-3 h-9 w-64" />
       <Skeleton className="mt-3 h-5 w-full max-w-2xl" />
       <Skeleton className="mt-7 h-24" />
       <Skeleton className="mt-6 h-96" />
+      <span className="sr-only">Loading users</span>
     </PageContainer>
   )
 }
@@ -219,7 +220,7 @@ export function AdminUsersPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="font-medium text-slate-950">{user.username}{user.uid === currentUser.uid ? " (You)" : ""}</p>
-                    <p className="mt-1 truncate text-sm text-slate-600">{user.email}</p>
+                    <p className="mt-1 break-all text-sm text-slate-600">{user.email}</p>
                   </div>
                   <UserRoleBadge role={user.role} />
                 </div>

@@ -35,6 +35,9 @@ export function AnalysisFormDialog({analysis, onSave, trigger}) {
   const analysisText = useWatch({control, name:"analysis_text"}) || ""
 
   function changeOpen(nextOpen) {
+    if (!nextOpen && isSubmitting) {
+      return
+    }
     if (nextOpen) {
       reset({
         analysis_text:analysis?.analysis_text || "",

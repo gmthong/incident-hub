@@ -8,16 +8,32 @@ export function ConfirmDialog({
   cancelLabel="Cancel",
   confirmLabel="Confirm",
   description,
+  isPending=false,
   onConfirm,
   title,
   trigger,
   variant="destructive",
 }) {
+  const [isConfirming, setIsConfirming] = useState(false)
   const [open, setOpen] = useState(false)
+  const pending = isPending || isConfirming
 
-  function handleConfirm() {
-    onConfirm?.()
-    setOpen(false)
+  async function handleConfirm() {
+    setIsConfirming(true)
+    try {
+      await onConfirm?.()
+      setOpen(false)
+    } catch {
+      // The caller owns the visible error; keep the confirmation open for retry.
+    } finally {
+      setIsConfirming(false)
+    }
+  }
+
+  function changeOpen(nextOpen) {
+    if (!pending) {
+      setOpen(nextOpen)
+    }
   }
 
   return (
@@ -26,12 +42,12 @@ export function ConfirmDialog({
       footer={(
         <>
           <DialogClose asChild>
-            <Button variant="outline">{cancelLabel}</Button>
+            <Button disabled={pending} variant="outline">{cancelLabel}</Button>
           </DialogClose>
-          <Button onClick={handleConfirm} variant={variant}>{confirmLabel}</Button>
+          <Button isLoading={pending} loadingLabel={confirmLabel} onClick={handleConfirm} variant={variant}>{confirmLabel}</Button>
         </>
       )}
-      onOpenChange={setOpen}
+      onOpenChange={changeOpen}
       open={open}
       title={title}
       trigger={trigger}

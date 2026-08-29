@@ -81,10 +81,11 @@ export function IncidentEditPage() {
 
   if (incidentQuery.isPending) {
     return (
-      <PageContainer>
+      <PageContainer aria-busy="true" aria-live="polite" role="status">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="mt-3 h-9 w-72" />
         <Skeleton className="mt-7 h-[32rem] max-w-3xl" />
+        <span className="sr-only">Loading incident editor</span>
       </PageContainer>
     )
   }

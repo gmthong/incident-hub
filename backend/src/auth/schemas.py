@@ -9,11 +9,19 @@ from src.db.enums import UserRole
 
 
 PASSWORD_MIN_LENGTH = 8
-PASSWORD_MAX_LENGTH = 100
+PASSWORD_MAX_LENGTH = 72
 PASSWORD_REQUIREMENTS_MESSAGE = "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+PASSWORD_LENGTH_MESSAGE = "Password must not exceed 72 characters"
+
+
+def validate_password_byte_length(password:str) -> str:
+    if len(password) > PASSWORD_MAX_LENGTH:
+        raise ValueError(PASSWORD_LENGTH_MESSAGE)
+    return password
 
 
 def validate_new_password(password:str) -> str:
+    validate_password_byte_length(password)
     has_lowercase = re.search(r"[a-z]", password) is not None
     has_uppercase = re.search(r"[A-Z]", password) is not None
     has_number = re.search(r"[0-9]", password) is not None
@@ -53,7 +61,7 @@ class UserModel(BaseModel):
 
 class UserLoginModel(BaseModel):
     email:EmailStr = Field(max_length=100)
-    password:str = Field(min_length=6, max_length=100)
+    password:str = Field(min_length=6, max_length=PASSWORD_MAX_LENGTH)
 
 class PasswordResetModel(BaseModel):
     email:EmailStr = Field(max_length=100)
@@ -70,3 +78,8 @@ class PasswordResetConfirmModel(BaseModel):
     @classmethod
     def validate_password_requirements(cls, password:str) -> str:
         return validate_new_password(password)
+
+    @field_validator("confirm_password")
+    @classmethod
+    def validate_confirmation_length(cls, password:str) -> str:
+        return validate_password_byte_length(password)

@@ -71,10 +71,10 @@ export function ResetPasswordPage() {
         <form className="space-y-5" noValidate onSubmit={onSubmit}>
           <AuthFormError message={errors.root?.serverError?.message} />
           <FormField error={errors.new_password?.message} id="reset-password" label="New password" required>
-            <PasswordInput autoComplete="new-password" maxLength={100} {...register("new_password")} />
+            <PasswordInput autoComplete="new-password" maxLength={72} {...register("new_password")} />
           </FormField>
           <FormField error={errors.confirm_password?.message} id="reset-confirm-password" label="Confirm new password" required>
-            <PasswordInput autoComplete="new-password" maxLength={100} {...register("confirm_password")} />
+            <PasswordInput autoComplete="new-password" maxLength={72} {...register("confirm_password")} />
           </FormField>
           <Button className="w-full" isLoading={isSubmitting} loadingLabel="Resetting password" type="submit">
             <KeyRound aria-hidden="true" className="size-4" />

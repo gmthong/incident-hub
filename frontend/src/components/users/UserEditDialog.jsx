@@ -39,6 +39,9 @@ export function UserEditDialog({isCurrentUser, onSave, trigger, user}) {
   const isChangingOwnRole = isCurrentUser && selectedRole !== user.role
 
   function changeOpen(nextOpen) {
+    if (!nextOpen && isSubmitting) {
+      return
+    }
     if (nextOpen) {
       reset({
         first_name:user.first_name || "",

@@ -22,7 +22,7 @@ import { queryKeys } from "@/services/queryKeys"
 
 function CategoriesSkeleton() {
   return (
-    <PageContainer>
+    <PageContainer aria-busy="true" aria-live="polite" role="status">
       <Skeleton className="h-5 w-32" />
       <Skeleton className="mt-3 h-9 w-72" />
       <Skeleton className="mt-3 h-5 w-full max-w-2xl" />
@@ -30,6 +30,7 @@ function CategoriesSkeleton() {
       <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({length:6}, (_, index) => <Skeleton className="h-32" key={index} />)}
       </div>
+      <span className="sr-only">Loading categories</span>
     </PageContainer>
   )
 }
@@ -92,6 +93,7 @@ export function CategoriesPage() {
       toast.success("Category deleted")
     } catch (error) {
       toast.error(getApiErrorMessage(error, "IncidentHub could not delete this category."))
+      throw error
     }
   }
 
@@ -196,10 +198,11 @@ export function CategoriesPage() {
                       <ConfirmDialog
                         confirmLabel="Delete category"
                         description={`Delete “${category.name}”? It will be removed from associated incidents, but the incidents themselves will remain.`}
+                        isPending={deleteMutation.isPending && deleteMutation.variables === category.uid}
                         onConfirm={() => deleteCategory(category)}
                         title="Delete category"
                         trigger={(
-                          <Button disabled={deleteMutation.isPending} size="sm" variant="destructive">
+                          <Button disabled={deleteMutation.isPending && deleteMutation.variables === category.uid} size="sm" variant="destructive">
                             <Trash2 aria-hidden="true" className="size-4" />
                             Delete
                           </Button>

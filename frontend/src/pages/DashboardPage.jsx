@@ -61,7 +61,7 @@ function MetricCard({icon:Icon, label, value, variant}) {
 
 function DashboardSkeleton() {
   return (
-    <PageContainer>
+    <PageContainer aria-busy="true" aria-live="polite" role="status">
       <Skeleton className="h-5 w-32" />
       <Skeleton className="mt-3 h-9 w-72 max-w-full" />
       <Skeleton className="mt-3 h-5 w-full max-w-xl" />
@@ -72,6 +72,7 @@ function DashboardSkeleton() {
         <Skeleton className="h-72" />
         <Skeleton className="h-72" />
       </div>
+      <span className="sr-only">Loading dashboard</span>
     </PageContainer>
   )
 }
@@ -195,8 +196,8 @@ export function DashboardPage() {
                     <Link className="block px-5 py-4 transition-colors hover:bg-slate-50" to={`/incidents/${incident.uid}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-950">{incident.title}</p>
-                          <p className="mt-1 truncate text-xs text-slate-600">
+                          <p className="break-words text-sm font-medium text-slate-950">{incident.title}</p>
+                          <p className="mt-1 break-words text-xs text-slate-600">
                             {incident.affected_service} · {incident.environment}
                           </p>
                         </div>

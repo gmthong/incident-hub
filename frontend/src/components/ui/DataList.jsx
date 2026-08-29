@@ -7,7 +7,7 @@ export function DataList({items, className}) {
       {items.map(({label, value}) => (
         <div className="grid gap-1 py-3 md:grid-cols-[10rem_1fr] md:gap-4" key={label}>
           <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
-          <dd className="min-w-0 text-sm text-slate-800">{value ?? "—"}</dd>
+          <dd className="min-w-0 break-words text-sm text-slate-800">{value ?? "—"}</dd>
         </div>
       ))}
     </dl>

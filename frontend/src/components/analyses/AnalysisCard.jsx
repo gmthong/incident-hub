@@ -47,6 +47,7 @@ export function AnalysisCard({analysis, currentUser, isDeleting=false, onDelete,
             <ConfirmDialog
               confirmLabel="Delete analysis"
               description={`Delete “${preview}”? This cannot be undone.`}
+              isPending={isDeleting}
               onConfirm={() => onDelete(analysis)}
               title="Delete analysis"
               trigger={(

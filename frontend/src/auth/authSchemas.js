@@ -1,6 +1,9 @@
 import { z } from "zod"
 
 
+const PASSWORD_MAX_LENGTH = 72
+
+
 // Validation shared by the public authentication forms.
 export const emailSchema = z
   .string()
@@ -14,18 +17,18 @@ export const loginPasswordSchema = z
   .string()
   .min(1, "Password is required")
   .min(6, "Password must be at least 6 characters")
-  .max(100, "Password must be 100 characters or fewer")
+  .max(PASSWORD_MAX_LENGTH, `Password must be ${PASSWORD_MAX_LENGTH} characters or fewer`)
 
 export const newPasswordSchema = z
   .string()
   .min(1, "Password is required")
   .refine(
     (value) => value.length >= 8
-      && value.length <= 100
+      && value.length <= PASSWORD_MAX_LENGTH
       && /[a-z]/.test(value)
       && /[A-Z]/.test(value)
       && /[0-9]/.test(value),
-    "Password must be 8–100 characters and contain at least 1 lowercase letter, 1 uppercase letter, and 1 number",
+    "Password must be 8–72 characters and contain at least 1 lowercase letter, 1 uppercase letter, and 1 number",
   )
 
 export const loginSchema = z.object({

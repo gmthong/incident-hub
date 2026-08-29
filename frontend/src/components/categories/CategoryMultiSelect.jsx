@@ -24,6 +24,9 @@ export function CategoryMultiSelect({categories, initialCategoryUids, onSave, tr
   }, [categories, search])
 
   function changeOpen(nextOpen) {
+    if (!nextOpen && isSaving) {
+      return
+    }
     if (nextOpen) {
       setSelectedUids(new Set(initialCategoryUids))
       setSearch("")

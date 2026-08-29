@@ -68,7 +68,7 @@ export function LoginPage() {
           <Input autoComplete="email" inputMode="email" maxLength={100} {...register("email")} />
         </FormField>
         <FormField error={errors.password?.message} id="login-password" label="Password" required>
-          <PasswordInput autoComplete="current-password" maxLength={100} {...register("password")} />
+          <PasswordInput autoComplete="current-password" maxLength={72} {...register("password")} />
         </FormField>
         <div className="flex justify-end">
           <Link className="text-sm font-medium text-blue-700 hover:text-blue-800" to="/forgot-password">

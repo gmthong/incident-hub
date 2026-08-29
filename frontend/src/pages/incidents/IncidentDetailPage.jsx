@@ -29,7 +29,7 @@ import { isValidUuid, userReference } from "@/utils/incidents"
 
 function IncidentDetailSkeleton() {
   return (
-    <PageContainer>
+    <PageContainer aria-busy="true" aria-live="polite" role="status">
       <Skeleton className="h-5 w-32" />
       <Skeleton className="mt-3 h-9 w-96 max-w-full" />
       <Skeleton className="mt-3 h-5 w-72 max-w-full" />
@@ -170,6 +170,7 @@ export function IncidentDetailPage() {
       toast.success("Analysis deleted")
     } catch (error) {
       toast.error(getApiErrorMessage(error, "IncidentHub could not delete this analysis."))
+      throw error
     }
   }
 
@@ -184,6 +185,7 @@ export function IncidentDetailPage() {
       })
     } catch (error) {
       toast.error(getApiErrorMessage(error, "IncidentHub could not delete this incident."))
+      throw error
     }
   }
 
@@ -245,6 +247,7 @@ export function IncidentDetailPage() {
               <ConfirmDialog
                 confirmLabel="Delete incident"
                 description={`Delete “${incident.title}”? Its analyses and category associations will also be permanently deleted.`}
+                isPending={deleteMutation.isPending}
                 onConfirm={deleteIncident}
                 title="Delete incident"
                 trigger={(

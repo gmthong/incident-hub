@@ -26,5 +26,5 @@ export function TableHead({children, className, ...props}) {
 }
 
 export function TableCell({children, className, ...props}) {
-  return <td className={cn("px-4 py-3 align-middle text-slate-700", className)} {...props}>{children}</td>
+  return <td className={cn("break-words px-4 py-3 align-middle text-slate-700", className)} {...props}>{children}</td>
 }

@@ -36,6 +36,7 @@ export const Button = forwardRef(function Button(
 ) {
   return (
     <button
+      aria-busy={isLoading || undefined}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-55",
         variants[variant] ?? variants.primary,

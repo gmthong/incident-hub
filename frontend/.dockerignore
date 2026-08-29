@@ -1,6 +1,9 @@
 node_modules
 dist
 coverage
+src/tests
+*.test.js
+*.test.jsx
 .env
 .env.*
 !.env.example
@@ -8,3 +11,4 @@ coverage
 .gitignore
 .DS_Store
 npm-debug.log*
+.eslintcache

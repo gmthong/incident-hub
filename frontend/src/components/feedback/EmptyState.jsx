@@ -5,7 +5,7 @@ import { cn } from "@/utils/cn"
 
 export function EmptyState({title, description, action, icon:Icon=Inbox, className}) {
   return (
-    <section className={cn("w-full max-w-xl rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm", className)}>
+    <section className={cn("w-full max-w-xl rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center shadow-sm sm:p-8", className)}>
       <span className="mx-auto grid size-12 place-items-center rounded-xl bg-slate-100 text-slate-600">
         <Icon aria-hidden="true" className="size-6" />
       </span>

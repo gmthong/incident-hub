@@ -20,7 +20,7 @@ import { filterAnalyses } from "@/utils/analyses"
 
 function AnalysesSkeleton() {
   return (
-    <PageContainer>
+    <PageContainer aria-busy="true" aria-live="polite" role="status">
       <Skeleton className="h-5 w-36" />
       <Skeleton className="mt-3 h-9 w-72" />
       <Skeleton className="mt-3 h-5 w-full max-w-2xl" />
@@ -28,6 +28,7 @@ function AnalysesSkeleton() {
       <div className="mt-6 grid gap-4">
         {Array.from({length:3}, (_, index) => <Skeleton className="h-48" key={index} />)}
       </div>
+      <span className="sr-only">Loading global analyses</span>
     </PageContainer>
   )
 }
@@ -86,6 +87,7 @@ export function AdminAnalysesPage() {
       toast.success("Analysis deleted")
     } catch (error) {
       toast.error(getApiErrorMessage(error, "IncidentHub could not delete this analysis."))
+      throw error
     }
   }
 

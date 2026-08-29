@@ -29,6 +29,9 @@ export function CategoryFormDialog({category, onSave, trigger}) {
   })
 
   function changeOpen(nextOpen) {
+    if (!nextOpen && isSubmitting) {
+      return
+    }
     if (nextOpen) {
       reset({name:category?.name || ""})
     }
