@@ -1,4 +1,4 @@
-# IncidentHub
+# 🚨 IncidentHub 
 
 IncidentHub is a full-stack internal workspace for reporting production incidents, assigning incidents to engineers for fixing, and recording post-incident analyses.
 
