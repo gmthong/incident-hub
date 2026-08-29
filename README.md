@@ -37,9 +37,73 @@ Overall, it was a fun journey. If I continue working on this project, I will mai
 - Background email notifications for new incidents and incident assignments
 - Migration-first Docker startup for the complete stack
 
-## Database Design
+## Database Design / ERD
 
-To be added...
+```mermaid
+erDiagram
+    USERS_ACCOUNTS ||--o{ INCIDENTS : reports
+    USERS_ACCOUNTS o|--o{ INCIDENTS : assigned_to
+    USERS_ACCOUNTS ||--o{ INCIDENT_ANALYSES : authors
+    INCIDENTS ||--o{ INCIDENT_ANALYSES : contains
+    INCIDENTS ||--o{ INCIDENT_CATEGORY_ASSOCIATION : categorized_by
+    INCIDENT_CATEGORIES ||--o{ INCIDENT_CATEGORY_ASSOCIATION : includes
+
+    USERS_ACCOUNTS {
+        uuid uid PK
+        varchar_50 username UK
+        varchar_50 first_name "nullable"
+        varchar_50 last_name "nullable"
+        user_role role "engineer, leader, admin"
+        boolean is_verified
+        varchar_100 email UK
+        varchar_100 password_hash
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    INCIDENTS {
+        uuid uid PK
+        varchar_50 title
+        varchar_50 affected_service
+        varchar_50 environment
+        timestamptz occurred_at
+        incident_status status "OPEN, INVESTIGATING, RESOLVED"
+        uuid reporter_uid FK
+        uuid assigned_user_uid FK "nullable"
+        timestamptz resolved_at "nullable"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    INCIDENT_ANALYSES {
+        uuid uid PK
+        analysis_severity severity "LOW, MEDIUM, HIGH, CRITICAL"
+        text analysis_text "1-5000 characters"
+        uuid user_uid FK
+        uuid incident_uid FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    INCIDENT_CATEGORIES {
+        uuid uid PK
+        varchar_50 name UK
+        timestamptz created_at
+    }
+
+    INCIDENT_CATEGORY_ASSOCIATION {
+        uuid incident_uid PK,FK
+        uuid category_uid PK,FK
+    }
+```
+
+**Relationship and deletion rules**:
+
+- A user can report many incidents; every incident has exactly 1 reporter. Reporter deletion is restricted while their incidents exist.
+- An incident has 0 or 1 assigned user; a user can be assigned many incidents. Deleting an assigned user sets the assignment to `NULL`.
+- A user can author many analyses; every analysis has exactly 1 author. Author deletion is restricted while their analyses exist.
+- An incident can contain many analyses. Deleting an incident cascades to its analyses.
+- Incidents and categories have a many-to-many relationship through `incident_category_association`. Its two foreign keys form the composite primary key, and deleting either parent cascades to its association rows.
 
 ## Roles and Authorization Summary
 
