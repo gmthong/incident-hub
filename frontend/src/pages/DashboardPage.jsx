@@ -81,8 +81,8 @@ function DashboardSkeleton() {
 export function DashboardPage() {
   const {user} = useAuth()
   const incidentsQuery = useQuery({
-    queryFn:({signal}) => apiRequest("incidents/", {signal}),
-    queryKey:queryKeys.incidents.all,
+    queryFn:({signal}) => apiRequest("incidents/summary", {signal}),
+    queryKey:queryKeys.incidents.summary,
   })
 
   if (incidentsQuery.isPending) {
@@ -107,7 +107,7 @@ export function DashboardPage() {
     )
   }
 
-  const summary = getDashboardSummary(incidentsQuery.data, user.uid)
+  const summary = getDashboardSummary(incidentsQuery.data)
   const metrics = [
     {icon:Activity, label:"Total incidents", value:summary.counts.total, variant:"slate"},
     {icon:FolderOpen, label:"Open", value:summary.counts.open, variant:"blue"},

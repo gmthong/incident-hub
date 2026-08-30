@@ -131,6 +131,7 @@ def incident_service(monkeypatch):
         [
             "get_all_incidents",
             "get_incidents_by_user",
+            "get_incident_summary",
             "get_incident",
             "create_incident",
             "update_incident",

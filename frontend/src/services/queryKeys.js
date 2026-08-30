@@ -15,10 +15,13 @@ export const queryKeys = Object.freeze({
   incidents:{
     all:["incidents"],
     detail:(uid) => ["incidents", "detail", uid],
-    reportedBy:(userUid) => ["incidents", "reported-by", userUid],
+    list:(parameters) => ["incidents", "list", parameters],
+    reportedBy:(userUid, parameters) => ["incidents", "reported-by", userUid, parameters],
+    summary:["incidents", "summary"],
   },
   users:{
     all:["users"],
     detail:(uid) => ["users", "detail", uid],
+    list:(parameters) => ["users", "list", parameters],
   },
 })

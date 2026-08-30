@@ -8,18 +8,25 @@ USER_PREFIX = "/api/v1/users"
 
 
 def test_get_all_users_returns_profiles(client, admin_user_service, make_user):
-    """Happy path: an admin can list user profiles."""
+    """Happy path: an admin receives paginated user profiles."""
     engineer = make_user(
         role=UserRole.ENGINEER,
         username="engineer",
         email="engineer@example.com",
     )
-    admin_user_service.get_all_users.return_value = [engineer]
+    admin_user_service.get_all_users.return_value = {
+        "items":[engineer],
+        "page":1,
+        "page_size":50,
+        "total":1,
+        "total_pages":1,
+    }
 
     response = client.get(f"{USER_PREFIX}/")
 
     assert response.status_code == 200
-    assert response.json()[0]["role"] == "engineer"
+    assert response.json()["items"][0]["role"] == "engineer"
+    assert response.json()["total_pages"] == 1
 
 
 def test_get_all_users_rejects_non_admin(client, current_user):
@@ -29,6 +36,13 @@ def test_get_all_users_rejects_non_admin(client, current_user):
     response = client.get(f"{USER_PREFIX}/")
 
     assert response.status_code == 403
+
+
+def test_get_all_users_rejects_invalid_page(client):
+    """Unhappy path: page numbers must start at one."""
+    response = client.get(f"{USER_PREFIX}/?page=0")
+
+    assert response.status_code == 422
 
 
 def test_get_user_returns_profile(client, admin_user_service, make_user):

@@ -29,14 +29,21 @@ INCIDENT_BODY = {
 
 
 def test_get_all_incidents_returns_incidents(client, incident_service, make_incident):
-    """Happy path: verified users can list incidents."""
+    """Happy path: verified users receive incident pagination metadata."""
     incident = make_incident()
-    incident_service.get_all_incidents.return_value = [incident]
+    incident_service.get_all_incidents.return_value = {
+        "items":[incident],
+        "page":1,
+        "page_size":50,
+        "total":1,
+        "total_pages":1,
+    }
 
     response = client.get(f"{INCIDENT_PREFIX}/")
 
     assert response.status_code == 200
-    assert response.json()[0]["uid"] == str(incident.uid)
+    assert response.json()["items"][0]["uid"] == str(incident.uid)
+    assert response.json()["total"] == 1
 
 
 def test_get_all_incidents_rejects_unverified_user(client, current_user):
@@ -48,6 +55,13 @@ def test_get_all_incidents_rejects_unverified_user(client, current_user):
     assert response.status_code == 403
 
 
+def test_get_all_incidents_rejects_page_size_above_limit(client):
+    """Unhappy path: callers cannot request more than 50 incidents at once."""
+    response = client.get(f"{INCIDENT_PREFIX}/?page_size=51")
+
+    assert response.status_code == 422
+
+
 def test_get_incidents_by_user_returns_reported_items(
     client,
     incident_service,
@@ -56,12 +70,18 @@ def test_get_incidents_by_user_returns_reported_items(
 ):
     """Happy path: a user's reported incidents are returned."""
     incident = make_incident()
-    incident_service.get_incidents_by_user.return_value = [incident]
+    incident_service.get_incidents_by_user.return_value = {
+        "items":[incident],
+        "page":1,
+        "page_size":50,
+        "total":1,
+        "total_pages":1,
+    }
 
     response = client.get(f"{INCIDENT_PREFIX}/users/{current_user.uid}")
 
     assert response.status_code == 200
-    assert response.json()[0]["reporter_uid"] == str(current_user.uid)
+    assert response.json()["items"][0]["reporter_uid"] == str(current_user.uid)
 
 
 def test_get_incidents_by_user_handles_missing_user(client, incident_service):
@@ -72,6 +92,26 @@ def test_get_incidents_by_user_handles_missing_user(client, incident_service):
 
     assert response.status_code == 404
     assert response.json()["error_code"] == "user_not_found"
+
+
+def test_get_incident_summary_returns_aggregate_counts(client, incident_service, make_incident):
+    """Happy path: dashboard counts are returned without loading every incident."""
+    incident = make_incident()
+    incident_service.get_incident_summary.return_value = {
+        "total":3,
+        "open":1,
+        "investigating":1,
+        "resolved":1,
+        "assigned_to_me":1,
+        "reported_by_me":2,
+        "recent_incidents":[incident],
+    }
+
+    response = client.get(f"{INCIDENT_PREFIX}/summary")
+
+    assert response.status_code == 200
+    assert response.json()["total"] == 3
+    assert response.json()["recent_incidents"][0]["uid"] == str(incident.uid)
 
 
 def test_get_incident_returns_details(client, incident_service, make_incident):

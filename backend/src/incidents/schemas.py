@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -7,6 +8,20 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from src.analyses.schemas import IncidentAnalysisModel
 from src.categories.schemas import IncidentCategoryModel
 from src.db.enums import IncidentStatus
+
+
+class IncidentListSort(str, Enum):
+    CREATED_DESC = "created-desc"
+    OCCURRED_ASC = "occurred-asc"
+    OCCURRED_DESC = "occurred-desc"
+    UPDATED_DESC = "updated-desc"
+
+
+class IncidentRelationship(str, Enum):
+    ALL = "all"
+    ASSIGNED_TO_ME = "assigned-to-me"
+    REPORTED_BY_ME = "reported-by-me"
+    UNASSIGNED = "unassigned"
 
 
 class IncidentModel(BaseModel):
@@ -28,6 +43,24 @@ class IncidentModel(BaseModel):
 
 class IncidentDetailsModel(IncidentModel):
     analyses:list[IncidentAnalysisModel]
+
+
+class PaginatedIncidentsModel(BaseModel):
+    items:list[IncidentModel]
+    page:int
+    page_size:int
+    total:int
+    total_pages:int
+
+
+class IncidentSummaryModel(BaseModel):
+    total:int
+    open:int
+    investigating:int
+    resolved:int
+    assigned_to_me:int
+    reported_by_me:int
+    recent_incidents:list[IncidentModel]
 
 
 class IncidentCreateModel(BaseModel):

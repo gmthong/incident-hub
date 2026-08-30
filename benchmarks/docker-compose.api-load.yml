@@ -1,0 +1,117 @@
+name: incidenthub-api-benchmark
+
+x-backend-environment: &backend-environment
+  DATABASE_URL: postgresql+asyncpg://benchmark:benchmark@db:5432/incidenthub_benchmark
+  JWT_SECRET_KEY: benchmark-only-secret-key-with-more-than-32-bytes
+  JWT_ALGORITHM: HS256
+  REDIS_URL: redis://redis:6379/0
+  MAIL_USERNAME: benchmark
+  MAIL_PASSWORD: benchmark
+  MAIL_SERVER: localhost
+  MAIL_PORT: 1025
+  MAIL_FROM: benchmark@example.com
+  MAIL_FROM_NAME: IncidentHub Benchmark
+  MAIL_STARTTLS: "false"
+  MAIL_SSL_TLS: "false"
+  USE_CREDENTIALS: "false"
+  VALIDATE_CERTS: "false"
+  FRONTEND_URL: http://localhost:3000
+  CORS_ORIGINS: '["http://localhost:3000"]'
+  TRUSTED_HOSTS: '["app","localhost","127.0.0.1"]'
+  COOKIE_SECURE: "false"
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: benchmark
+      POSTGRES_PASSWORD: benchmark
+      POSTGRES_DB: incidenthub_benchmark
+    volumes:
+      - benchmark_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U benchmark -d incidenthub_benchmark"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - benchmark_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build:
+      context: ../backend
+      dockerfile: docker/Dockerfile
+    image: incidenthub-api-benchmark:latest
+    command: ["migrate"]
+    environment: *backend-environment
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: ../backend
+      dockerfile: docker/Dockerfile
+    image: incidenthub-api-benchmark:latest
+    command: ["web"]
+    environment: *backend-environment
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: "no"
+
+  seed:
+    image: incidenthub-api-benchmark:latest
+    entrypoint: ["python"]
+    command: ["/benchmarks/seed_api_load.py"]
+    working_dir: /app
+    environment:
+      <<: *backend-environment
+      PYTHONPATH: /app
+      BENCHMARK_USERS: ${BENCHMARK_USERS:-500}
+      INCIDENTS_PER_USER: ${INCIDENTS_PER_USER:-2}
+      ANALYSES_PER_INCIDENT: ${ANALYSES_PER_INCIDENT:-1}
+    volumes:
+      - ./seed_api_load.py:/benchmarks/seed_api_load.py:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: "no"
+
+  k6:
+    image: grafana/k6:2.2.0
+    environment:
+      BASE_URL: http://app:8000
+      PROFILE: ${PROFILE:-smoke}
+      BENCHMARK_USER_COUNT: ${BENCHMARK_USERS:-500}
+    volumes:
+      - ./api_load.js:/benchmarks/api_load.js:ro
+    command: ["run", "/benchmarks/api_load.js"]
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  benchmark_postgres_data:
+    name: incidenthub_api_benchmark_postgres_data
+  benchmark_redis_data:
+    name: incidenthub_api_benchmark_redis_data

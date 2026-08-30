@@ -31,6 +31,7 @@ Overall, it was a fun journey. If I continue working on this project, I will mai
 - In-memory access tokens with HttpOnly refresh-cookie sessions
 - Engineer, leader, and admin authorization
 - Incident reporting, status updates, category replacement, assignment, and deletion
+- Server-side incident and user pagination with a maximum page size of 50
 - Severity-based incident analyses with author/admin modification rules
 - Admin category, user, and global-analysis pages
 - Responsive mobile, tablet, and desktop layouts
@@ -98,7 +99,6 @@ erDiagram
 ```
 
 **Relationship and deletion rules**:
-
 - A user can report many incidents; every incident has exactly 1 reporter. Reporter deletion is restricted while their incidents exist.
 - An incident has 0 or 1 assigned user; a user can be assigned many incidents. Deleting an assigned user sets the assignment to `NULL`.
 - A user can author many analyses; every analysis has exactly 1 author. Author deletion is restricted while their analyses exist.

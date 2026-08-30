@@ -1,6 +1,7 @@
 import uuid
+from typing import Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.analyses.schemas import (
@@ -10,7 +11,7 @@ from src.analyses.schemas import (
 from src.analyses.service import IncidentAnalysisService
 from src.auth.dependencies import RoleChecker, get_current_user
 from src.categories.schemas import IncidentCategoryAssignmentModel
-from src.db.enums import UserRole
+from src.db.enums import IncidentStatus, UserRole
 from src.db.main import get_session
 from src.db.models import Incident, IncidentAnalysis, User
 from src.errors import IncidentNotFound
@@ -18,8 +19,12 @@ from src.incidents.schemas import (
     IncidentAssignmentModel,
     IncidentCreateModel,
     IncidentDetailsModel,
+    IncidentListSort,
     IncidentModel,
+    IncidentRelationship,
+    IncidentSummaryModel,
     IncidentUpdateModel,
+    PaginatedIncidentsModel,
 )
 from src.incidents.service import IncidentService
 
@@ -32,14 +37,65 @@ leader_or_admin = Depends(RoleChecker([UserRole.LEADER, UserRole.ADMIN]))
 admin_user = Depends(RoleChecker([UserRole.ADMIN]))
 
 
-@incident_router.get("/", response_model=list[IncidentModel], dependencies=[verified_user])
-async def get_all_incidents(session:AsyncSession = Depends(get_session)) -> list[Incident]:
-    return await incident_service.get_all_incidents(session)
+@incident_router.get("/", response_model=PaginatedIncidentsModel, dependencies=[verified_user])
+async def get_all_incidents(
+    page:int = Query(default=1, ge=1),
+    page_size:int = Query(default=50, ge=1, le=50),
+    search:Optional[str] = Query(default=None, alias="q", max_length=100),
+    status_filter:Optional[IncidentStatus] = Query(default=None, alias="status"),
+    environment:Optional[str] = Query(default=None, max_length=50),
+    category_uid:Optional[uuid.UUID] = Query(default=None, alias="category"),
+    incident_relationship:IncidentRelationship = Query(default=IncidentRelationship.ALL),
+    sort:IncidentListSort = Query(default=IncidentListSort.CREATED_DESC),
+    current_user:User = Depends(get_current_user),
+    session:AsyncSession = Depends(get_session),
+) -> PaginatedIncidentsModel:
+    return await incident_service.get_all_incidents(
+        current_user_uid=current_user.uid,
+        session=session,
+        page=page,
+        page_size=page_size,
+        search=search,
+        status=status_filter,
+        environment=environment,
+        category_uid=category_uid,
+        incident_relationship=incident_relationship,
+        sort=sort,
+    )
 
 
-@incident_router.get("/users/{user_uid}", response_model=list[IncidentModel], dependencies=[verified_user])
-async def get_incidents_by_user(user_uid:uuid.UUID, session:AsyncSession = Depends(get_session)) -> list[Incident]:
-    return await incident_service.get_incidents_by_user(user_uid, session)
+@incident_router.get("/summary", response_model=IncidentSummaryModel, dependencies=[verified_user])
+async def get_incident_summary(current_user:User = Depends(get_current_user), session:AsyncSession = Depends(get_session)) -> IncidentSummaryModel:
+    return await incident_service.get_incident_summary(current_user.uid, session)
+
+
+@incident_router.get("/users/{user_uid}", response_model=PaginatedIncidentsModel, dependencies=[verified_user])
+async def get_incidents_by_user(
+    user_uid:uuid.UUID,
+    page:int = Query(default=1, ge=1),
+    page_size:int = Query(default=50, ge=1, le=50),
+    search:Optional[str] = Query(default=None, alias="q", max_length=100),
+    status_filter:Optional[IncidentStatus] = Query(default=None, alias="status"),
+    environment:Optional[str] = Query(default=None, max_length=50),
+    category_uid:Optional[uuid.UUID] = Query(default=None, alias="category"),
+    incident_relationship:IncidentRelationship = Query(default=IncidentRelationship.ALL),
+    sort:IncidentListSort = Query(default=IncidentListSort.CREATED_DESC),
+    current_user:User = Depends(get_current_user),
+    session:AsyncSession = Depends(get_session),
+) -> PaginatedIncidentsModel:
+    return await incident_service.get_incidents_by_user(
+        user_uid=user_uid,
+        current_user_uid=current_user.uid,
+        session=session,
+        page=page,
+        page_size=page_size,
+        search=search,
+        status=status_filter,
+        environment=environment,
+        category_uid=category_uid,
+        incident_relationship=incident_relationship,
+        sort=sort,
+    )
 
 
 @incident_router.get("/{incident_uid}", response_model=IncidentDetailsModel, dependencies=[verified_user])

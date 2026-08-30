@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { FilePenLine, Search, Users } from "lucide-react"
 import { toast } from "sonner"
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { PageHeader } from "@/components/ui/PageHeader"
+import { Pagination } from "@/components/ui/Pagination"
 import { Select } from "@/components/ui/Select"
 import {
   Table,
@@ -27,7 +28,9 @@ import {
 import { USER_ROLES } from "@/config/constants"
 import { apiRequest } from "@/services/apiClient"
 import { queryKeys } from "@/services/queryKeys"
-import { filterUsers } from "@/utils/users"
+
+
+const PAGE_SIZE = 50
 
 
 function VerificationBadge({isVerified}) {
@@ -72,23 +75,26 @@ export function AdminUsersPage() {
   const [role, setRole] = useState("")
   const [search, setSearch] = useState("")
   const [verification, setVerification] = useState("")
+  const [page, setPage] = useState(1)
+  const deferredSearch = useDeferredValue(search)
   const isAdmin = currentUser?.role === USER_ROLES.ADMIN
+  const requestParameters = useMemo(() => {
+    const parameters = new URLSearchParams({page:String(page), page_size:String(PAGE_SIZE)})
+    if (deferredSearch.trim()) parameters.set("q", deferredSearch.trim())
+    if (role) parameters.set("role", role)
+    if (verification) parameters.set("is_verified", String(verification === "verified"))
+    return parameters.toString()
+  }, [deferredSearch, page, role, verification])
   const usersQuery = useQuery({
     enabled:isAdmin,
-    queryFn:({signal}) => apiRequest("users/", {signal}),
-    queryKey:queryKeys.users.all,
+    queryFn:({signal}) => apiRequest(`users/?${requestParameters}`, {signal}),
+    queryKey:queryKeys.users.list(requestParameters),
   })
   const updateMutation = useMutation({
     mutationFn:({userUid, values}) => apiRequest(`users/${userUid}`, {body:values, method:"PATCH"}),
   })
-  const users = useMemo(
-    () => Array.isArray(usersQuery.data) ? usersQuery.data : [],
-    [usersQuery.data],
-  )
-  const visibleUsers = useMemo(
-    () => filterUsers(users, {role, search, verification}),
-    [role, search, users, verification],
-  )
+  const pagination = usersQuery.data || {items:[], page, page_size:PAGE_SIZE, total:0, total_pages:0}
+  const users = Array.isArray(pagination.items) ? pagination.items : []
 
   useEffect(() => {
     if (usersQuery.error?.status === 403) {
@@ -98,10 +104,8 @@ export function AdminUsersPage() {
 
   async function updateUser(selectedUser, values) {
     const updatedUser = await updateMutation.mutateAsync({userUid:selectedUser.uid, values})
-    queryClient.setQueryData(queryKeys.users.all, (currentUsers=[]) => (
-      currentUsers.map((user) => user.uid === updatedUser.uid ? updatedUser : user)
-    ))
     queryClient.setQueryData(queryKeys.users.detail(updatedUser.uid), updatedUser)
+    await queryClient.invalidateQueries({queryKey:queryKeys.users.all})
     if (updatedUser.uid === currentUser.uid) {
       await refreshUser()
     }
@@ -144,11 +148,16 @@ export function AdminUsersPage() {
         <label className="relative">
           <span className="sr-only">Search users</span>
           <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          <Input className="pl-9" onChange={(event) => setSearch(event.target.value)} placeholder="Search name, email, or UUID" value={search} />
+          <Input
+            className="pl-9"
+            onChange={(event) => { setSearch(event.target.value); setPage(1) }}
+            placeholder="Search name, email, or UUID"
+            value={search}
+          />
         </label>
         <label>
           <span className="sr-only">Filter by role</span>
-          <Select onChange={(event) => setRole(event.target.value)} value={role}>
+          <Select onChange={(event) => { setRole(event.target.value); setPage(1) }} value={role}>
             <option value="">All roles</option>
             <option value={USER_ROLES.ENGINEER}>Engineer</option>
             <option value={USER_ROLES.LEADER}>Leader</option>
@@ -157,7 +166,7 @@ export function AdminUsersPage() {
         </label>
         <label>
           <span className="sr-only">Filter by verification</span>
-          <Select onChange={(event) => setVerification(event.target.value)} value={verification}>
+          <Select onChange={(event) => { setVerification(event.target.value); setPage(1) }} value={verification}>
             <option value="">All verification states</option>
             <option value="verified">Verified</option>
             <option value="unverified">Not verified</option>
@@ -165,14 +174,14 @@ export function AdminUsersPage() {
         </label>
       </section>
 
-      <p className="mt-5 text-sm text-slate-600">Showing <span className="font-semibold text-slate-900">{visibleUsers.length}</span> of {users.length} users</p>
+      <p className="mt-5 text-sm text-slate-600">Showing <span className="font-semibold text-slate-900">{users.length}</span> of {pagination.total} matching users</p>
 
-      {visibleUsers.length === 0 ? (
+      {users.length === 0 ? (
         <EmptyState
           action={(
             <button
               className="text-sm font-medium text-blue-700 hover:text-blue-800"
-              onClick={() => { setSearch(""); setRole(""); setVerification("") }}
+              onClick={() => { setSearch(""); setRole(""); setVerification(""); setPage(1) }}
               type="button"
             >
               Clear filters
@@ -197,7 +206,7 @@ export function AdminUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visibleUsers.map((user) => (
+                {users.map((user) => (
                   <TableRow key={user.uid}>
                     <TableCell>
                       <p className="font-medium text-slate-950">{user.username}{user.uid === currentUser.uid ? " (You)" : ""}</p>
@@ -215,7 +224,7 @@ export function AdminUsersPage() {
           </div>
 
           <div className="mt-5 grid gap-4 lg:hidden">
-            {visibleUsers.map((user) => (
+            {users.map((user) => (
               <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-[var(--shadow-surface)]" key={user.uid}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -231,6 +240,7 @@ export function AdminUsersPage() {
               </article>
             ))}
           </div>
+          <Pagination onPageChange={setPage} page={pagination.page} totalPages={pagination.total_pages} />
         </>
       )}
     </PageContainer>

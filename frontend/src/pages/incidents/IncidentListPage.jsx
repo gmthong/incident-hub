@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useDeferredValue, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { FilePlus2, SearchX, Siren } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
@@ -12,12 +12,11 @@ import { ErrorState } from "@/components/feedback/ErrorState"
 import { Skeleton } from "@/components/feedback/Skeleton"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PageHeader } from "@/components/ui/PageHeader"
+import { Pagination } from "@/components/ui/Pagination"
 import { apiRequest } from "@/services/apiClient"
 import { queryKeys } from "@/services/queryKeys"
 import {
   DEFAULT_INCIDENT_FILTERS,
-  filterAndSortIncidents,
-  getIncidentFilterOptions,
   getIncidentFilters,
   hasActiveIncidentFilters,
 } from "@/utils/incidents"
@@ -30,6 +29,31 @@ const filterParameters = {
   search:"q",
   sort:"sort",
   status:"status",
+}
+
+const PAGE_SIZE = 50
+
+
+function getPage(searchParams) {
+  const requestedPage = Number(searchParams.get("page") || 1)
+  return Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1
+}
+
+
+function getRequestParameters(filters, page) {
+  const parameters = new URLSearchParams({
+    page:String(page),
+    page_size:String(PAGE_SIZE),
+  })
+  if (filters.search.trim()) parameters.set("q", filters.search.trim())
+  if (filters.status) parameters.set("status", filters.status)
+  if (filters.environment.trim()) parameters.set("environment", filters.environment.trim())
+  if (filters.category) parameters.set("category", filters.category)
+  if (filters.relationship !== DEFAULT_INCIDENT_FILTERS.relationship) {
+    parameters.set("relationship", filters.relationship)
+  }
+  if (filters.sort !== DEFAULT_INCIDENT_FILTERS.sort) parameters.set("sort", filters.sort)
+  return parameters.toString()
 }
 
 
@@ -50,25 +74,36 @@ function IncidentListSkeleton({reportedOnly}) {
 export function IncidentListPage({reportedOnly=false}) {
   const {user} = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
+  const filters = getIncidentFilters(searchParams)
+  const page = getPage(searchParams)
+  const deferredSearch = useDeferredValue(filters.search)
+  const requestParameters = getRequestParameters({...filters, search:deferredSearch}, page)
   const incidentsQuery = useQuery({
     enabled:!reportedOnly || Boolean(user?.uid),
     queryFn:({signal}) => apiRequest(
-      reportedOnly ? `incidents/users/${user.uid}` : "incidents/",
+      `${reportedOnly ? `incidents/users/${user.uid}` : "incidents/"}?${requestParameters}`,
       {signal},
     ),
-    queryKey:reportedOnly ? queryKeys.incidents.reportedBy(user?.uid) : queryKeys.incidents.all,
+    queryKey:reportedOnly
+      ? queryKeys.incidents.reportedBy(user?.uid, requestParameters)
+      : queryKeys.incidents.list(requestParameters),
   })
-  const filters = getIncidentFilters(searchParams)
-  const incidents = useMemo(
-    () => Array.isArray(incidentsQuery.data) ? incidentsQuery.data : [],
-    [incidentsQuery.data],
-  )
-  const options = useMemo(() => getIncidentFilterOptions(incidents), [incidents])
-  const visibleIncidents = useMemo(
-    () => filterAndSortIncidents(incidents, filters, user?.uid),
-    [filters, incidents, user?.uid],
-  )
+  const categoriesQuery = useQuery({
+    queryFn:({signal}) => apiRequest("categories/", {signal}),
+    queryKey:queryKeys.categories.all,
+  })
+  const pagination = incidentsQuery.data || {items:[], page, page_size:PAGE_SIZE, total:0, total_pages:0}
+  const incidents = Array.isArray(pagination.items) ? pagination.items : []
+  const categories = Array.isArray(categoriesQuery.data) ? categoriesQuery.data : []
   const hasFilters = hasActiveIncidentFilters(filters)
+
+  useEffect(() => {
+    if (pagination.total_pages > 0 && page > pagination.total_pages) {
+      const next = new URLSearchParams(searchParams)
+      next.set("page", String(pagination.total_pages))
+      setSearchParams(next, {replace:true})
+    }
+  }, [page, pagination.total_pages, searchParams, setSearchParams])
 
   function changeFilter(name, value) {
     const next = new URLSearchParams(searchParams)
@@ -78,11 +113,23 @@ export function IncidentListPage({reportedOnly=false}) {
     } else {
       next.set(parameter, value)
     }
+    next.delete("page")
     setSearchParams(next, {replace:true})
   }
 
   function clearFilters() {
     setSearchParams({}, {replace:true})
+  }
+
+  function changePage(nextPage) {
+    const next = new URLSearchParams(searchParams)
+    if (nextPage === 1) {
+      next.delete("page")
+    } else {
+      next.set("page", String(nextPage))
+    }
+    setSearchParams(next, {replace:true})
+    window.scrollTo({behavior:"smooth", top:0})
   }
 
   if (incidentsQuery.isPending) {
@@ -122,7 +169,7 @@ export function IncidentListPage({reportedOnly=false}) {
         title={title}
       />
 
-      {incidents.length === 0 ? (
+      {pagination.total === 0 && !hasFilters ? (
         <EmptyState
           action={(
             <Link className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700" to="/incidents/new">
@@ -140,8 +187,7 @@ export function IncidentListPage({reportedOnly=false}) {
       ) : (
         <>
           <IncidentFilters
-            categories={options.categories}
-            environments={options.environments}
+            categories={categories}
             filters={filters}
             hasActiveFilters={hasFilters}
             onChange={changeFilter}
@@ -150,11 +196,11 @@ export function IncidentListPage({reportedOnly=false}) {
 
           <div className="mt-5 flex items-center justify-between gap-4">
             <p className="text-sm text-slate-600">
-              Showing <span className="font-semibold text-slate-900">{visibleIncidents.length}</span> of {incidents.length} incidents
+              Showing <span className="font-semibold text-slate-900">{incidents.length}</span> of {pagination.total} matching incidents
             </p>
           </div>
 
-          {visibleIncidents.length === 0 ? (
+          {incidents.length === 0 ? (
             <EmptyState
               action={(
                 <button className="text-sm font-medium text-blue-700 hover:text-blue-800" onClick={clearFilters} type="button">
@@ -169,13 +215,18 @@ export function IncidentListPage({reportedOnly=false}) {
           ) : (
             <>
               <div className="mt-5 hidden lg:block">
-                <IncidentTable currentUserUid={user.uid} incidents={visibleIncidents} />
+                <IncidentTable currentUserUid={user.uid} incidents={incidents} />
               </div>
               <div className="mt-5 grid gap-4 lg:hidden">
-                {visibleIncidents.map((incident) => (
+                {incidents.map((incident) => (
                   <IncidentCard currentUserUid={user.uid} incident={incident} key={incident.uid} />
                 ))}
               </div>
+              <Pagination
+                onPageChange={changePage}
+                page={pagination.page}
+                totalPages={pagination.total_pages}
+              />
             </>
           )}
         </>

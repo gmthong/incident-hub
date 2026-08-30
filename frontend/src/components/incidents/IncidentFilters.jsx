@@ -6,7 +6,7 @@ import { Select } from "@/components/ui/Select"
 import { INCIDENT_RELATIONSHIPS, INCIDENT_SORTS } from "@/utils/incidents"
 
 
-export function IncidentFilters({categories, environments, filters, hasActiveFilters, onChange, onClear}) {
+export function IncidentFilters({categories, filters, hasActiveFilters, onChange, onClear}) {
   return (
     <section aria-label="Incident filters" className="mt-7 rounded-xl border border-slate-200 bg-white p-4 shadow-[var(--shadow-surface)]">
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(13rem,1.4fr)_repeat(4,minmax(9rem,1fr))]">
@@ -33,12 +33,12 @@ export function IncidentFilters({categories, environments, filters, hasActiveFil
 
         <label>
           <span className="sr-only">Filter by environment</span>
-          <Select onChange={(event) => onChange("environment", event.target.value)} value={filters.environment}>
-            <option value="">All environments</option>
-            {environments.map((environment) => (
-              <option key={environment} value={environment}>{environment}</option>
-            ))}
-          </Select>
+          <Input
+            maxLength={50}
+            onChange={(event) => onChange("environment", event.target.value)}
+            placeholder="Filter environment"
+            value={filters.environment}
+          />
         </label>
 
         <label>
